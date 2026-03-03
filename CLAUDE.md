@@ -18,7 +18,7 @@ SimonOS/
 
 ## Projects
 
-- **cal-manager** — Manages Google Calendar: conflict detection, travel holds, location updates, wife notifications.
+- **cal-manager** — Manages Google Calendar: conflict detection, travel holds, location updates, wife notifications, color coding. Includes a Gmail Chrome extension (`extension/`) with a "📅 Scheduler" button that uses Claude Opus to suggest meeting times or create calendar events from email threads. API server runs on port 5555 (`uvicorn api.server:app --port 5555 --reload`).
 - **customer-convos** — Tracks customer calls. Polls Google Calendar for external meetings, enriches with Gong recordings/transcripts and Google Drive sales decks, matches customers via Salesforce.
 
 ## Conventions

@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "Cal Manager — Suggest Times",
-  "version": "1.0",
-  "description": "Insert available meeting times into Gmail compose windows.",
+  "name": "Cal Manager — Scheduler",
+  "version": "2.0",
+  "description": "Suggest meeting times or create calendar events directly from Gmail.",
   "permissions": ["activeTab", "scripting"],
   "host_permissions": [
     "https://mail.google.com/*",
-    "http://localhost:5555/*"
+    "http://localhost:5555/*",
+    "http://127.0.0.1:5555/*"
   ],
   "content_scripts": [
     {

@@ -43,12 +43,19 @@ GOOGLE_PERSONAL_REFRESH_TOKEN = os.getenv("GOOGLE_PERSONAL_REFRESH_TOKEN", "")
 # Google Maps
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
+# Anthropic
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+
 # Database
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://localhost/cal_manager")
 
 # Scheduling
 POLL_INTERVAL_MINUTES = int(os.getenv("POLL_INTERVAL_MINUTES", "30"))
 LOOKAHEAD_DAYS = int(os.getenv("LOOKAHEAD_DAYS", "14"))
+
+# Identity (used for invite title generation)
+USER_NAME = os.getenv("USER_NAME", "Jason")
+COMPANY_NAME = os.getenv("COMPANY_NAME", "Simon AI")
 
 # API server (used by Chrome extension)
 API_PORT = int(os.getenv("API_PORT", "5555"))
