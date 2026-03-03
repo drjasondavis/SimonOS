@@ -1,31 +1,52 @@
 """Google Calendar read/write integration.
 
-Requires a service account with domain-wide delegation and the
-https://www.googleapis.com/auth/calendar scope.
+Two auth paths:
+  - Work calendar (Google Workspace): service account with domain-wide delegation
+  - Personal calendar (Gmail): OAuth 2.0 with a stored refresh token
+
+Run `python scripts/authorize_personal.py` once to generate the refresh token.
 """
 from datetime import datetime
-from google.oauth2 import service_account
+
+from google.oauth2 import service_account, credentials as oauth2_credentials
+from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
+
 import config
 
-SCOPES = ["https://www.googleapis.com/auth/calendar"]
+WORK_SCOPES = ["https://www.googleapis.com/auth/calendar"]
+PERSONAL_SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 
 
-def get_service():
+def _work_service():
     creds = service_account.Credentials.from_service_account_file(
-        config.GOOGLE_SERVICE_ACCOUNT_FILE, scopes=SCOPES
+        config.GOOGLE_SERVICE_ACCOUNT_FILE, scopes=WORK_SCOPES
     )
-    # Impersonate the calendar owner so we can write on their behalf
-    # Set GOOGLE_IMPERSONATE_EMAIL in .env if using domain-wide delegation
-    import os
-    impersonate = os.getenv("GOOGLE_IMPERSONATE_EMAIL")
-    if impersonate:
-        creds = creds.with_subject(impersonate)
     return build("calendar", "v3", credentials=creds)
 
 
+def _personal_service():
+    creds = oauth2_credentials.Credentials(
+        token=None,
+        refresh_token=config.GOOGLE_PERSONAL_REFRESH_TOKEN,
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=config.GOOGLE_OAUTH_CLIENT_ID,
+        client_secret=config.GOOGLE_OAUTH_CLIENT_SECRET,
+        scopes=PERSONAL_SCOPES,
+    )
+    creds.refresh(Request())
+    return build("calendar", "v3", credentials=creds)
+
+
+def _service_for(calendar_id: str):
+    """Return the right service based on which calendar we're accessing."""
+    if calendar_id == config.PERSONAL_CALENDAR_ID:
+        return _personal_service()
+    return _work_service()
+
+
 def fetch_events(calendar_id: str, start: datetime, end: datetime) -> list[dict]:
-    service = get_service()
+    service = _service_for(calendar_id)
     results = []
     page_token = None
 
@@ -48,28 +69,27 @@ def fetch_events(calendar_id: str, start: datetime, end: datetime) -> list[dict]
 
 
 def create_event(calendar_id: str, body: dict) -> dict:
-    return get_service().events().insert(calendarId=calendar_id, body=body).execute()
+    return _work_service().events().insert(calendarId=calendar_id, body=body).execute()
 
 
 def update_event(calendar_id: str, event_id: str, body: dict) -> dict:
-    return get_service().events().update(
+    return _work_service().events().update(
         calendarId=calendar_id, eventId=event_id, body=body
     ).execute()
 
 
 def delete_event(calendar_id: str, event_id: str):
-    get_service().events().delete(calendarId=calendar_id, eventId=event_id).execute()
+    _work_service().events().delete(calendarId=calendar_id, eventId=event_id).execute()
 
 
 def upsert_location_event(calendar_id: str, date: str, location: str,
                           existing_id: str = None) -> str:
-    """Create or update an all-day event showing current location for a given date."""
     body = {
         "summary": f"📍 {location}",
         "start": {"date": date},
         "end": {"date": date},
         "visibility": "private",
-        "transparency": "transparent",  # doesn't block time
+        "transparency": "transparent",
     }
     if existing_id:
         ev = update_event(calendar_id, existing_id, body)
@@ -93,7 +113,6 @@ def create_travel_hold(calendar_id: str, title: str, start: datetime,
 
 def create_wife_notification_event(title: str, start: datetime, end: datetime,
                                    description: str) -> dict:
-    """Create a private event that invites wife so she sees it on her calendar."""
     body = {
         "summary": title,
         "description": description,

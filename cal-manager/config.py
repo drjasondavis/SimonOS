@@ -1,4 +1,11 @@
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load shared root .env first, then project-level .env (project values win)
+_root = Path(__file__).parent.parent
+load_dotenv(_root / ".env")
+load_dotenv(Path(__file__).parent / ".env", override=True)
 
 # Calendars
 WORK_CALENDAR_ID = os.getenv("WORK_CALENDAR_ID", "primary")
@@ -13,11 +20,19 @@ WORK_DAYS = [int(d) for d in os.getenv("WORK_DAYS", "0,1,2,3,4").split(",")]  # 
 
 # Locations
 HOME_ADDRESS = os.getenv("HOME_ADDRESS", "")
-WORK_ADDRESS = os.getenv("WORK_ADDRESS", "")
+SUMMER_ADDRESS = os.getenv("SUMMER_ADDRESS", "")
 TIMEZONE = os.getenv("TIMEZONE", "America/Chicago")
 
-# Google
+# Google — Workspace (service account, shared directly with the calendar)
 GOOGLE_SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE")
+
+# Google — Personal Gmail (OAuth 2.0, read-only)
+# Run scripts/authorize_personal.py once to populate the refresh token
+GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_OAUTH_CLIENT_ID", "")
+GOOGLE_OAUTH_CLIENT_SECRET = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET", "")
+GOOGLE_PERSONAL_REFRESH_TOKEN = os.getenv("GOOGLE_PERSONAL_REFRESH_TOKEN", "")
+
+# Google Maps
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
 # Database

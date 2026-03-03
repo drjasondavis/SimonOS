@@ -1,4 +1,11 @@
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load shared root .env first, then project-level .env (project values win)
+_root = Path(__file__).parent.parent
+load_dotenv(_root / ".env")
+load_dotenv(Path(__file__).parent / ".env", override=True)
 
 # Internal domains — attendees with these domains are considered internal
 INTERNAL_DOMAINS = os.getenv("INTERNAL_DOMAINS", "").split(",")

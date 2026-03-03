@@ -25,11 +25,9 @@ def infer_location(events: list[Event]) -> str:
     if in_person:
         return in_person[0].location.split(",")[0].strip()
 
-    today = datetime.now(tz)
-    if today.weekday() in config.WORK_DAYS and config.WORK_ADDRESS:
-        return config.WORK_ADDRESS.split(",")[0].strip()
-
-    return config.HOME_ADDRESS.split(",")[0].strip() or "Home"
+    # Fully remote — default to home (summer address takes priority if set)
+    base = config.SUMMER_ADDRESS or config.HOME_ADDRESS
+    return base.split(",")[0].strip() or "Home"
 
 
 def run():

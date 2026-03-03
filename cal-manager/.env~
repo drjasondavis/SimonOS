@@ -1,11 +1,5 @@
-# Google — Workspace (service account with domain-wide delegation)
+# Google (service account with Calendar + impersonation scopes)
 GOOGLE_SERVICE_ACCOUNT_FILE=/path/to/service-account.json
-GOOGLE_IMPERSONATE_EMAIL=you@yourcompany.com
-
-# Google — Personal Gmail (OAuth 2.0, run scripts/authorize_personal.py once)
-GOOGLE_OAUTH_CLIENT_ID=
-GOOGLE_OAUTH_CLIENT_SECRET=
-GOOGLE_PERSONAL_REFRESH_TOKEN=
 
 # Calendar IDs
 WORK_CALENDAR_ID=primary
@@ -21,8 +15,8 @@ WORK_DAYS=0,1,2,3,4
 
 # Locations (full street addresses for accurate travel time)
 HOME_ADDRESS=123 Main St, Your City, State 00000
-SUMMER_ADDRESS=                          # optional second home
-TIMEZONE=America/New_York
+WORK_ADDRESS=456 Office Blvd, Your City, State 00000
+TIMEZONE=America/Chicago
 
 # Google Maps (for travel time calculation)
 GOOGLE_MAPS_API_KEY=
