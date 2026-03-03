@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from db.models import get_engine, create_tables
-from jobs import poll_events, location_updater, travel_holds, wife_notifications, conflict_checker, color_coder
+from jobs import poll_events, location_updater, travel_holds, wife_notifications, conflict_checker, color_coder, location_finder
 import config
 
 if __name__ == "__main__":
@@ -34,6 +34,9 @@ if __name__ == "__main__":
 
     print("--- Color-coding external invites ---")
     color_coder.run()
+
+    print("--- Finding in-person events without a location ---")
+    location_finder.run()
 
     print("--- Checking work/personal conflicts ---")
     conflicts = conflict_checker.run()
