@@ -1,9 +1,11 @@
 google-auth
 google-api-python-client
-simple-salesforce
+googlemaps
 sqlalchemy
 psycopg2-binary
-requests
-alembic
+python-dotenv
 fastapi
-uvicorn[standard]
+uvicorn
+anthropic
+pytz
+apscheduler
