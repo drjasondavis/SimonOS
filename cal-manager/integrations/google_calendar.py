@@ -18,10 +18,21 @@ WORK_SCOPES = ["https://www.googleapis.com/auth/calendar"]
 PERSONAL_SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 
 
+def _confirm(action: str) -> bool:
+    """In TEST_MODE, print the action and ask for confirmation. Always returns True otherwise."""
+    if not config.TEST_MODE:
+        return True
+    print(f"\n[TEST MODE] {action}")
+    answer = input("  Proceed? (y/n): ").strip().lower()
+    return answer == "y"
+
+
 def _work_service():
     creds = service_account.Credentials.from_service_account_file(
         config.GOOGLE_SERVICE_ACCOUNT_FILE, scopes=WORK_SCOPES
     )
+    if config.GOOGLE_IMPERSONATE_EMAIL:
+        creds = creds.with_subject(config.GOOGLE_IMPERSONATE_EMAIL)
     return build("calendar", "v3", credentials=creds)
 
 
@@ -69,16 +80,36 @@ def fetch_events(calendar_id: str, start: datetime, end: datetime) -> list[dict]
 
 
 def create_event(calendar_id: str, body: dict) -> dict:
+    title = body.get("summary", "(no title)")
+    start = body.get("start", {}).get("dateTime") or body.get("start", {}).get("date", "")
+    visibility = body.get("visibility", "default")
+    if not _confirm(f"CREATE [{visibility}] '{title}' at {start} on {calendar_id}"):
+        return {"id": None, "_skipped": True}
     return _work_service().events().insert(calendarId=calendar_id, body=body).execute()
 
 
 def update_event(calendar_id: str, event_id: str, body: dict) -> dict:
+    title = body.get("summary", "(no title)")
+    visibility = body.get("visibility", "default")
+    if not _confirm(f"UPDATE [{visibility}] '{title}' ({event_id}) on {calendar_id}"):
+        return {"id": event_id, "_skipped": True}
     return _work_service().events().update(
         calendarId=calendar_id, eventId=event_id, body=body
     ).execute()
 
 
+def patch_event(calendar_id: str, event_id: str, fields: dict, label: str = "") -> dict:
+    """Partial update — only sends the fields provided."""
+    if not _confirm(f"PATCH {label or event_id} on {calendar_id}: {fields}"):
+        return {"_skipped": True}
+    return _work_service().events().patch(
+        calendarId=calendar_id, eventId=event_id, body=fields
+    ).execute()
+
+
 def delete_event(calendar_id: str, event_id: str):
+    if not _confirm(f"DELETE event {event_id} on calendar {calendar_id}"):
+        return
     _work_service().events().delete(calendarId=calendar_id, eventId=event_id).execute()
 
 

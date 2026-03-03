@@ -11,6 +11,13 @@ load_dotenv(Path(__file__).parent / ".env", override=True)
 WORK_CALENDAR_ID = os.getenv("WORK_CALENDAR_ID", "primary")
 PERSONAL_CALENDAR_ID = os.getenv("PERSONAL_CALENDAR_ID", "")
 
+# Internal domains — organizers from these domains are treated as colleagues, not external
+INTERNAL_DOMAINS = [
+    d.strip().lower()
+    for d in os.getenv("INTERNAL_DOMAINS", "simondata.com,simon.ai").split(",")
+    if d.strip()
+]
+
 WIFE_EMAIL = os.getenv("WIFE_EMAIL", "kkutzke@gmail.com")
 
 # Working hours (24h format, local time)
@@ -23,8 +30,9 @@ HOME_ADDRESS = os.getenv("HOME_ADDRESS", "")
 SUMMER_ADDRESS = os.getenv("SUMMER_ADDRESS", "")
 TIMEZONE = os.getenv("TIMEZONE", "America/Chicago")
 
-# Google — Workspace (service account, shared directly with the calendar)
+# Google — Workspace (service account with optional impersonation)
 GOOGLE_SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE")
+GOOGLE_IMPERSONATE_EMAIL = os.getenv("GOOGLE_IMPERSONATE_EMAIL", "")
 
 # Google — Personal Gmail (OAuth 2.0, read-only)
 # Run scripts/authorize_personal.py once to populate the refresh token
@@ -45,3 +53,6 @@ LOOKAHEAD_DAYS = int(os.getenv("LOOKAHEAD_DAYS", "14"))
 # API server (used by Chrome extension)
 API_PORT = int(os.getenv("API_PORT", "5555"))
 API_SECRET = os.getenv("API_SECRET", "change-me")
+
+# Test mode — print every write action and ask for confirmation before executing
+TEST_MODE = os.getenv("TEST_MODE", "false").lower() == "true"

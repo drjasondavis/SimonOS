@@ -1,8 +1,6 @@
 """
-Job: For consecutive in-person events, calculate driving time via Google Maps
-and insert a travel block between them. Warns if there isn't enough gap.
-
-Only creates a hold if one doesn't already exist for that event pair.
+Job: For each in-person event, create travel holds departing from home (outbound)
+and returning home (inbound). Each direction is checked and created independently.
 """
 from datetime import datetime, timedelta, timezone
 
@@ -17,9 +15,32 @@ tz = pytz.timezone(config.TIMEZONE)
 engine = get_engine(config.DATABASE_URL)
 
 
+def dbg(msg):
+    if config.TEST_MODE:
+        print(f"  [debug] {msg}")
+
+
+def create_hold(session, title, hold_start, hold_end, from_loc, to_loc,
+                from_event_id, to_event_id, travel_mins):
+    ev = google_calendar.create_travel_hold(
+        config.WORK_CALENDAR_ID, title, hold_start, hold_end, from_loc, to_loc
+    )
+    session.add(TravelHold(
+        hold_event_id=ev["id"],
+        from_event_id=from_event_id,
+        to_event_id=to_event_id,
+        from_location=from_loc,
+        to_location=to_loc,
+        travel_minutes=travel_mins,
+        created_at=datetime.now(timezone.utc),
+    ))
+
+
 def run():
     now = datetime.now(timezone.utc)
     end = now + timedelta(days=config.LOOKAHEAD_DAYS)
+    home = config.HOME_ADDRESS
+    home_short = home.split(",")[0]
 
     with Session(engine) as session:
         events = (
@@ -35,61 +56,73 @@ def run():
             .all()
         )
 
-        for i in range(len(events) - 1):
-            a, b = events[i], events[i + 1]
+        dbg(f"Found {len(events)} in-person events, checking travel holds for each")
 
-            # Skip if same location
-            if (a.location or "").strip().lower() == (b.location or "").strip().lower():
-                continue
+        for event in events:
+            local_start = event.start.astimezone(tz).strftime("%a %b %d %I:%M%p")
+            dest_short = event.location.split(",")[0]
+            dbg(f"Event: '{event.title}' at {dest_short} ({local_start})")
 
-            gap_minutes = (b.start - a.end).total_seconds() / 60
-            if gap_minutes < 0:
-                continue  # overlapping events — not our job to fix
-
-            # Skip if hold already exists for this pair
-            existing = session.query(TravelHold).filter_by(
-                from_event_id=a.id, to_event_id=b.id
+            # --- Outbound: home → event ---
+            outbound_exists = session.query(TravelHold).filter_by(
+                to_event_id=event.id
             ).first()
-            if existing:
-                continue
 
-            travel_mins = google_maps.get_travel_minutes(
-                a.location, b.location, departure_time=a.end
-            )
-
-            if gap_minutes < travel_mins:
-                print(
-                    f"[travel_holds] ⚠️  Not enough time between '{a.title}' "
-                    f"and '{b.title}' (need {travel_mins}min, have {int(gap_minutes)}min)"
-                )
-                hold_start = a.end
-                hold_end = b.start  # fill the whole gap
+            if outbound_exists:
+                dbg(f"  → Outbound hold already exists, skipping")
             else:
-                hold_start = a.end
-                hold_end = a.end + timedelta(minutes=travel_mins)
+                dbg(f"  → Querying outbound: home → {dest_short}")
+                travel_mins, mode = google_maps.get_travel_minutes(
+                    home, event.location, departure_time=event.start
+                )
+                emoji = "🚶" if mode == "WALK" else "🚇"
+                dbg(f"  → Outbound: {travel_mins}min ({mode})")
 
-            from_short = a.location.split(",")[0]
-            to_short = b.location.split(",")[0]
+                hold_start = event.start - timedelta(minutes=travel_mins)
+                if hold_start < now:
+                    dbg(f"  → ⚠️  Outbound hold would start in the past, skipping")
+                else:
+                    create_hold(
+                        session,
+                        title=f"{emoji} Travel → {dest_short}",
+                        hold_start=hold_start,
+                        hold_end=event.start,
+                        from_loc=home,
+                        to_loc=event.location,
+                        from_event_id=None,
+                        to_event_id=event.id,
+                        travel_mins=travel_mins,
+                    )
+                    print(f"[travel_holds] {home_short} → {dest_short} ({travel_mins}min {mode} before '{event.title}')")
 
-            ev = google_calendar.create_travel_hold(
-                config.WORK_CALENDAR_ID,
-                f"🚗 Travel → {to_short}",
-                hold_start,
-                hold_end,
-                a.location,
-                b.location,
-            )
+            # --- Return: event → home ---
+            return_exists = session.query(TravelHold).filter(
+                TravelHold.from_event_id == event.id,
+                TravelHold.to_event_id == None,
+            ).first()
 
-            session.add(TravelHold(
-                hold_event_id=ev["id"],
-                from_event_id=a.id,
-                to_event_id=b.id,
-                from_location=a.location,
-                to_location=b.location,
-                travel_minutes=travel_mins,
-                created_at=datetime.now(timezone.utc),
-            ))
-            print(f"[travel_holds] Created hold: {from_short} → {to_short} ({travel_mins}min)")
+            if return_exists:
+                dbg(f"  → Return hold already exists, skipping")
+            else:
+                dbg(f"  → Querying return: {dest_short} → home")
+                return_mins, return_mode = google_maps.get_travel_minutes(
+                    event.location, home, departure_time=event.end
+                )
+                return_emoji = "🚶" if return_mode == "WALK" else "🚇"
+                dbg(f"  → Return: {return_mins}min ({return_mode})")
+
+                create_hold(
+                    session,
+                    title=f"{return_emoji} Travel → home",
+                    hold_start=event.end,
+                    hold_end=event.end + timedelta(minutes=return_mins),
+                    from_loc=event.location,
+                    to_loc=home,
+                    from_event_id=event.id,
+                    to_event_id=None,
+                    travel_mins=return_mins,
+                )
+                print(f"[travel_holds] {dest_short} → home ({return_mins}min {return_mode} after '{event.title}')")
 
         session.commit()
 

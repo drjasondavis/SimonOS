@@ -1,9 +1,8 @@
-# Google (service account with Calendar + impersonation scopes)
-GOOGLE_SERVICE_ACCOUNT_FILE=/path/to/service-account.json
+# Project-specific config (shared credentials come from root .env)
 
 # Calendar IDs
-WORK_CALENDAR_ID=primary
-PERSONAL_CALENDAR_ID=your-personal-calendar-id@gmail.com
+WORK_CALENDAR_ID=jason@simondata.com
+PERSONAL_CALENDAR_ID=jvdavis@gmail.com
 
 # Wife notifications
 WIFE_EMAIL=kkutzke@gmail.com
@@ -13,13 +12,10 @@ WORK_HOURS_START=9
 WORK_HOURS_END=18
 WORK_DAYS=0,1,2,3,4
 
-# Locations (full street addresses for accurate travel time)
-HOME_ADDRESS=123 Main St, Your City, State 00000
-WORK_ADDRESS=456 Office Blvd, Your City, State 00000
-TIMEZONE=America/Chicago
-
-# Google Maps (for travel time calculation)
-GOOGLE_MAPS_API_KEY=
+# Locations
+HOME_ADDRESS=363 2nd St Brooklyn, NY 11215
+SUMMER_ADDRESS=18 East Landing Rd Hampton Bays, NY 11946
+TIMEZONE=America/New_York
 
 # Database
 DATABASE_URL=postgresql://localhost/cal_manager
