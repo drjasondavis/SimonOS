@@ -134,7 +134,18 @@ def run():
             for row in session.query(TravelHold).all()
         }
 
-    events = [e for e in events if e.id not in travel_hold_ids]
+    # Titles that are clearly not in-person meetings needing a location
+    SKIP_TITLES = {
+        "hold", "heads down time", "heads down", "all hands", "all-hands",
+    }
+
+    def _should_skip(event: Event) -> bool:
+        if event.id in travel_hold_ids:
+            return True
+        title = (event.title or "").strip().lower()
+        return title in SKIP_TITLES
+
+    events = [e for e in events if not _should_skip(e)]
 
     if not events:
         print("[location_finder] No in-person events without a location. All good.")

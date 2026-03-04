@@ -10,8 +10,8 @@ def get_client() -> Salesforce:
         _client = Salesforce(
             username=config.SALESFORCE_USERNAME,
             password=config.SALESFORCE_PASSWORD,
-            security_token=config.SALESFORCE_SECURITY_TOKEN,
-            domain=config.SALESFORCE_DOMAIN,
+            security_token=config.SALESFORCE_TOKEN,
+            instance_url=config.SALESFORCE_INSTANCE_URL,
         )
     return _client
 
