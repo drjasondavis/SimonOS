@@ -1,0 +1,8 @@
+anthropic
+fastapi
+uvicorn
+pydantic
+python-dotenv
+pytz
+sqlalchemy
+psycopg2-binary

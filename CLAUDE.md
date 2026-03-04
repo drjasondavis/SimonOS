@@ -18,8 +18,10 @@ SimonOS/
 
 ## Projects
 
-- **cal-manager** — Manages Google Calendar: conflict detection, travel holds, location updates, wife notifications, color coding. Includes a Gmail Chrome extension (`extension/`) with a "📅 Scheduler" button that uses Claude Opus to suggest meeting times or create calendar events from email threads. API server runs on port 5555 (`uvicorn api.server:app --port 5555 --reload`).
+- **cal-manager** — Manages Google Calendar: conflict detection, travel holds, location updates, wife notifications, color coding. The `api/server.py` scheduling logic has been superseded by `email-responder`. The `extension/` folder is kept for reference but the active extension is in `email-responder/extension/`. Background jobs still run via `scheduler.py`.
 - **customer-convos** — Tracks customer calls. Polls Google Calendar for external meetings, enriches with Gong recordings/transcripts and Google Drive sales decks, matches customers via Salesforce.
+- **email-responder** — Generalized AI reply assistant. Chrome extension injects an "✨ Reply" button into Gmail compose windows. API server (port 5556) classifies email intent and dispatches to pluggable handlers: `scheduling` (suggest times / create calendar events, reads cal-manager DB) and `general` (draft any reply). Run with: `uvicorn api.server:app --port 5556 --reload`.
+- **cap-table** — Cap table management and investor request handling. Syncs investors, rounds, and holdings from Carta. Polls Gmail for investor emails, classifies request type, and uses Claude to draft responses. Query API on port 5557. Run scheduler with `python scheduler.py`; API with `uvicorn api.server:app --port 5557 --reload`.
 
 ## Conventions
 
