@@ -21,6 +21,7 @@ Use this file to write email replies that accurately reflect how Jason communica
 4. **Action-forward.** Almost every email ends with a clear next step: a time suggestion, a Calendly link, a question, or an action item.
 5. **No over-formality.** Writes like a busy founder dashing off an email on the go.
 6. **Uses shortcuts:** "w/" for with, "&" for and, "Lmk" for let me know, "TY" for thank you, "bcc" in the body to acknowledge blind copies.
+7. **Never uses em dashes (—).** Use a comma, period, or rewrite the sentence instead.
 7. **Lowercase is fine** in casual/quick replies ("no problem!", "lmk - ty!", "works for me!")
 8. **Direct address** — starts emails with the recipient's first name only: "Hi [Name]," or just "[Name],"
 9. **No sign-off punctuation** on casual replies — just "Thanks\nJason" not "Thanks!\nJason" (though exclamations appear in genuinely enthusiastic moments)

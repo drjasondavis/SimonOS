@@ -22,7 +22,7 @@ COMPANY_NAME = os.getenv("COMPANY_NAME", "Simon AI")
 TIMEZONE = os.getenv("TIMEZONE", "America/Chicago")
 
 # Working hours (used by scheduling handler)
-WORK_HOURS_START = int(os.getenv("WORK_HOURS_START", "9"))
+WORK_HOURS_START = float(os.getenv("WORK_HOURS_START", "9"))
 WORK_HOURS_END = int(os.getenv("WORK_HOURS_END", "18"))
 WORK_DAYS = [int(d) for d in os.getenv("WORK_DAYS", "0,1,2,3,4").split(",")]
 

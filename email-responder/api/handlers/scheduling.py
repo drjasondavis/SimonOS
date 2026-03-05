@@ -27,6 +27,12 @@ from prompts import EMAIL_VOICE
 _tz = pytz.timezone(config.TIMEZONE)
 _engine = get_engine(config.DATABASE_URL)
 
+def _to_time(decimal_hour: float):
+    """Convert a decimal hour (e.g. 9.5) to (hour, minute) tuple."""
+    h = int(decimal_hour)
+    m = int(round((decimal_hour - h) * 60))
+    return h, m
+
 CONTEXT_WINDOWS = {
     "lunch":      [(11, 14)],
     "happy_hour": [(17, 19)],
@@ -90,8 +96,10 @@ def find_free_slots(
         day_busy = [e for e in busy if e.start.astimezone(_tz).date() == day]
 
         for (win_start_h, win_end_h) in windows:
-            window_start = _tz.localize(datetime(day.year, day.month, day.day, win_start_h))
-            window_end   = _tz.localize(datetime(day.year, day.month, day.day, win_end_h))
+            sh, sm = _to_time(win_start_h)
+            eh, em = _to_time(win_end_h)
+            window_start = _tz.localize(datetime(day.year, day.month, day.day, sh, sm))
+            window_end   = _tz.localize(datetime(day.year, day.month, day.day, eh, em))
             cursor = window_start
 
             while cursor + timedelta(minutes=duration_minutes) <= window_end:
